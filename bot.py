@@ -8,7 +8,7 @@ bot = telebot.TeleBot(config.token) #@quickbase_bot
 
 password_set=["111","222","333"]  #пароль доступа
 id_pass = []                      #сюда кладутся id пользователей
-gen_doc=[]                        # тут записываем инфу перед записью в базу
+gen_doc=[]                        #тут записываем инфу перед записью в базу
 stop_set = ["Стоп","стоп","stop","Stop"]  # набор слов для выхода из систем
 
 def save_to_base(gen_doc,message):             # функция записи в базу
@@ -29,18 +29,15 @@ def find_all_user_doc(message):
 def state_mes (message):                #функция проверющая состояние пользователя
     if message.text in stop_set:        # если  слово в стоп листе
         if message.chat.id in id_pass : # если пользователь авторизован
-            bot.send_message(message.from_user.id,"Вы вышли") # сообщение о выходе из систем
+            bot.send_message(message.from_user.id,"You logged off") # сообщение о выходе из систем
             id_pass.remove(message.chat.id)   #удаляем id пользователя из списка
-
-#def state_access(message):  # если пароль не верный
-    #return bot.send_message(message.from_user.id,"password error")
 
 @bot.message_handler(commands = ["start","help"])
 def start(message):
-    bot.send_message(message.from_user.id,"Привет, введите пароль если вы не зарегистрированы!")
+    bot.send_message(message.from_user.id,"Hi, enter the password if you are not logged in")
 
 @bot.message_handler(commands=["find"],func = lambda message: message.chat.id in id_pass) # запуск поиска всей инфы из базы
-def find_row(message): # запускам функцию написанную выше
+def find_row(message):              # запускам функцию печати из базы 
     find_all_user_doc(message)
 
 @bot.message_handler(func = lambda message: message.text not in password_set and message.chat.id not in id_pass)
@@ -55,10 +52,10 @@ def save_new_id(message):
         
     if message.chat.id not in id_pass:              #если id нет в списке значит добавляем 
         id_pass.append(message.chat.id)
-        bot.send_message(message.from_user.id,"Ваш id")
+        bot.send_message(message.from_user.id,"Your ID")
         bot.send_message(message.from_user.id, message.chat.id )
     else:
-        bot.send_message(message.from_user.id,"Вы уже в базе")
+        bot.send_message(message.from_user.id,"You are already in the database")
 
 
 @bot.message_handler(func = lambda message: message.chat.id in id_pass)    # если авторизация выполнена 
