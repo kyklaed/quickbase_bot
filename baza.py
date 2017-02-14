@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
-Класс работы с базой данных на чтение из нее,  создан для работ с ботом и базой прилагаемой к курсовой. основная функция
-которая используется ботом это случайный выбор записи из базы + попутно подсчет колличества записей в базе.
-"""
 
 import sqlite3
-import random
-#database = 'cooking.db'
 class Basesql:
 
     def __init__(self, database,name_table):
@@ -19,15 +13,10 @@ class Basesql:
             self.cursor.execute("INSERT INTO 'users' ('idchat', 'doc', 'docn', 'datastart', 'dataend') VALUES ('{0}','{1}','{2}','{3}','{4}')".format(val,val1,val2,val3,val4))
             self.connection.commit()
 
-    def select_all(self):
-        """ Получаем все строки """
-        with self.connection:
-            return self.cursor.execute('SELECT * FROM users').fetchall()
-
     def select_single(self,rownum):
         """ Получаем одну строку с номером rownum """
         with self.connection:
-            return self.cursor.execute('SELECT * FROM users WHERE id = ?', (rownum,)).fetchall()[0]
+            return self.cursor.execute('SELECT doc, docn, datastart, dataend FROM users WHERE idchat = {0}'.format(rownum)).fetchall()
 
     def mass_row(self):
         with self.connection:
@@ -44,6 +33,6 @@ class Basesql:
         self.connection.close()
 
 
-#a =Basesql('cooking.db','vegan')
+#a =Basesql('base_doc.db','users')
 #print(a.select_random())
 #print(a.select_all())

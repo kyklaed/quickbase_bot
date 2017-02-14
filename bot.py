@@ -16,7 +16,6 @@ def save_to_base(gen_dic,message):             # функция записи в 
     db = baza.Basesql('base_doc.db', 'users')  # подключение к бд
     db.insert_db(gen_dic[message.chat.id][0], gen_dic[message.chat.id][1], gen_dic[message.chat.id][2], 
                          gen_dic[message.chat.id][3], gen_dic[message.chat.id][4]) # добавляем в базу инфу в 4 поля
-    
     print(len(gen_dic[message.chat.id]))
     if len(gen_dic[message.chat.id]) >= 5:      #колличество элементов в списке
         gen_dic[message.chat.id].clear()
@@ -28,6 +27,13 @@ def find_all_user_doc(message):
     a = db.mass_row()                         #выбираем все строки
     for i in range(len(a)):
         bot.send_message(message.from_user.id,", ".join(a[i])) # печатаем строки из базы
+        
+def  find_my_list(message):
+    db = baza.Basesql('base_doc.db', 'users')   # подключение к бд
+    a = db.select_single(message.chat.id)       #выбираем все строки
+    print('A')
+    for i in range(len(a)):
+        bot.send_message(message.from_user.id,", ".join(a[i]))   
 
 def state_mes (message):                #функция проверющая состояние пользователя
     if message.text in stop_set:        # если  слово в стоп листе
@@ -39,9 +45,13 @@ def state_mes (message):                #функция проверющая с�
 def start(message):
     bot.send_message(message.from_user.id,"Hi, enter the password if you are not logged in")
 
-@bot.message_handler(commands=["find"],func = lambda message: message.chat.id in id_pass) # запуск поиска всей инфы из базы
+@bot.message_handler(commands=["find","findmy"],func = lambda message: message.chat.id in id_pass) # запуск поиска всей инфы из базы
 def find_row(message):              # запускам функцию печати из базы 
-    find_all_user_doc(message)
+    if message.text =="/find":
+        find_all_user_doc(message)
+    if message.text == "/findmy":
+        find_my_list(message)
+        
 
 @bot.message_handler(func = lambda message: message.text not in password_set and message.chat.id not in id_pass)
 def state_access(message):
