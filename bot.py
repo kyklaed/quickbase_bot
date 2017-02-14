@@ -8,17 +8,20 @@ bot = telebot.TeleBot(config.token) #@quickbase_bot
 
 password_set=["111","222","333"]  #пароль доступа
 id_pass = []                      #сюда кладутся id пользователей
-gen_doc=[]                        #тут записываем инфу перед записью в базу
+gen_dic={}
 stop_set = ["Стоп","стоп","stop","Stop"]  # набор слов для выхода из систем
 
-def save_to_base(gen_doc,message):             # функция записи в базу
+
+def save_to_base(gen_dic,message):             # функция записи в базу
     db = baza.Basesql('base_doc.db', 'users')  # подключение к бд
-    db.insert_db(gen_doc[0], gen_doc[1], gen_doc[2], gen_doc[3], gen_doc[4]) # добавляем в базу инфу в 4 поля
-    print(len(gen_doc))
-    if len(gen_doc) >= 5:                      #or message.text in stop_set:  #колличество элементов в списке
-        gen_doc.clear()                        #очистка списка если больше или равно 5
-        gen_doc.append(message.chat.id)        # добавялем в начало списка id для дальнейшей работы и добавления новых данных
-        print("to new list for doc = ",gen_doc)
+    db.insert_db(gen_dic[message.chat.id][0], gen_dic[message.chat.id][1], gen_dic[message.chat.id][2], 
+                         gen_dic[message.chat.id][3], gen_dic[message.chat.id][4]) # добавляем в базу инфу в 4 поля
+    
+    print(len(gen_dic[message.chat.id]))
+    if len(gen_dic[message.chat.id]) >= 5:      #колличество элементов в списке
+        gen_dic[message.chat.id].clear()
+        gen_dic[message.chat.id].append(message.chat.id)        # добавялем в начало списка id для дальнейшей работы и добавления новых данных
+        print("to new list for doc = ",gen_dic)
 
 def find_all_user_doc(message):
     db = baza.Basesql('base_doc.db', 'users') # подключение к бд
@@ -47,8 +50,7 @@ def state_access(message):
 @bot.message_handler(func = lambda message: message.text in password_set) #авторизация по паролю
 def save_new_id(message):
     bot.send_message(message.from_user.id,"The correct password!")
-    if  len(gen_doc) == 0:                          #если список пуст значит добавляем в начало списка id пользователя
-        gen_doc.append(message.chat.id)
+    
         
     if message.chat.id not in id_pass:              #если id нет в списке значит добавляем 
         id_pass.append(message.chat.id)
@@ -61,11 +63,21 @@ def save_new_id(message):
 @bot.message_handler(func = lambda message: message.chat.id in id_pass)    # если авторизация выполнена 
 def new_doc(message):
     state_mes(message)
-    if message.text not in stop_set: 
-        gen_doc.append(message.text)    #добавляем в список, слова введеные с клавиатуры
-        print(gen_doc)
-    if message.text == "end":           #если введено слово end деламе запись в базу 
-        save_to_base(gen_doc,message)
+    if message.chat.id not in gen_dic.keys():
+        gen_dic[message.chat.id]=[] 
+        if message.text not in stop_set:
+            gen_dic[message.chat.id].append(message.chat.id)
+            gen_dic[message.chat.id].append(message.text)
+            print(gen_dic[message.chat.id])
+        if message.text == "end":           #если введено слово end деламе запись в базу 
+            save_to_base(gen_dic,message)
+    else:
+        if message.text not in stop_set:
+            gen_dic[message.chat.id].append(message.text)
+            print(gen_dic[message.chat.id])
+        if message.text == "end":           #если введено слово end деламе запись в базу 
+            save_to_base(gen_dic,message)
+        
 
 
 bot.polling(none_stop=True)
