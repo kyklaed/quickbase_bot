@@ -3,6 +3,7 @@
 import config
 import telebot
 import baza
+import re
 
 bot = telebot.TeleBot(config.token) #@quickbase_bot
 
@@ -10,6 +11,7 @@ password_set=["111","222","333"]  #пароль доступа
 id_pass = []                      #сюда кладутся id пользователей
 gen_dic={}
 stop_set = ["Стоп","стоп","stop","Stop"]  # набор слов для выхода из систем
+check_find = {}
 
 
 def save_to_base(gen_dic,message):             # функция записи в базу
@@ -30,10 +32,20 @@ def find_all_user_doc(message):
         
 def  find_my_list(message):
     db = baza.Basesql('base_doc.db', 'users')   # подключение к бд
-    a = db.select_single(message.chat.id)       #выбираем все строки
-    print('A')
+    a = db.select_single(message.chat.id)       #выбираем только записи сделанные пользователем
     for i in range(len(a)):
-        bot.send_message(message.from_user.id,", ".join(a[i]))   
+        bot.send_message(message.from_user.id,", ".join(a[i])) 
+
+
+def date_find_doc(message):
+    print("TYTYTYTYT")
+    if check_find[message.chat.id]== 1:
+        datafind = re.findall(r'\d{2}.\d{2}.\d{4}',message.text)
+        db = baza.Basesql('base_doc.db', 'users')
+        a = db.date_find_row(datafind)
+        for i in range(len(a)):
+            bot.send_message(message.from_user.id,", ".join(a[i]))
+ 
 
 def state_mes (message):                #функция проверющая состояние пользователя
     if message.text in stop_set:        # если  слово в стоп листе
@@ -45,13 +57,21 @@ def state_mes (message):                #функция проверющая с�
 def start(message):
     bot.send_message(message.from_user.id,"Hi, enter the password if you are not logged in")
 
-@bot.message_handler(commands=["find","findmy"],func = lambda message: message.chat.id in id_pass) # запуск поиска всей инфы из базы
+@bot.message_handler(commands=["find","findmy","datafind"],func = lambda message: message.chat.id in id_pass) # запуск поиска всей инфы из базы
 def find_row(message):              # запускам функцию печати из базы 
     if message.text =="/find":
         find_all_user_doc(message)
     if message.text == "/findmy":
         find_my_list(message)
+    if message.text == "/datafind":
+       bot.send_message(message.from_user.id,"Enter data")
+       check_find[message.chat.id]=1
+       print(check_find[message.chat.id])
         
+        #datafind = re.findall(r'\d{2}.\d{2}.\d{4}',message.text)
+        #print(datafind)
+        #date_find_doc(datafind)
+             
 
 @bot.message_handler(func = lambda message: message.text not in password_set and message.chat.id not in id_pass)
 def state_access(message):
@@ -85,9 +105,9 @@ def new_doc(message):
         if message.text not in stop_set:
             gen_dic[message.chat.id].append(message.text)
             print(gen_dic[message.chat.id])
-        if message.text == "end":           #если введено слово end деламе запись в базу 
+        if message.text == "end":           #если введено слово end деламе запись в базу
+            print(message)
             save_to_base(gen_dic,message)
         
-
 
 bot.polling(none_stop=True)

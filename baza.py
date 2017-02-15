@@ -21,7 +21,13 @@ class Basesql:
     def mass_row(self):
         with self.connection:
             return self.cursor.execute('SELECT doc, docn, datastart, dataend FROM users').fetchall()
-
+            
+    def date_find_row(self,rownum):
+        with self.connection:
+            return self.cursor.execute('SELECT doc, docn, datastart, dataend FROM users WHERE datastart = {0}'.format(rownum)).fetchall()
+        
+        
+        
     def count_rows(self):
         """ Считаем количество строк """
         with self.connection:
