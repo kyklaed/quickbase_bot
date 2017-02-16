@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import sqlite3
+import re
 class Basesql:
 
     def __init__(self, database,name_table):
@@ -35,8 +36,11 @@ class Basesql:
     def close(self):
         """ Закрываем текущее соединение с БД """
         self.connection.close()
-
 """
+b= input("= ")
 a =Basesql('base_doc.db','users')
-print(a.date_find_row('30.12.2016'))
+ff = re.findall(r'\d{2}\.?\d{2}\.?\d{4}',b)
+print(ff[0])
+print(a.date_find_row(ff[0]))
 """
+

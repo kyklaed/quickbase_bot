@@ -42,7 +42,7 @@ def date_find_doc(message):
         datafind = re.findall(r'\d{2}.\d{2}.\d{4}',message.text)
         print(datafind)
         db = baza.Basesql('base_doc.db', 'users')
-        a = db.date_find_row(datafind)
+        a = db.date_find_row(datafind[0])
         for i in range(len(a)):
             bot.send_message(message.from_user.id,", ".join(a[i]))
         check_find[message.chat.id] = 0
