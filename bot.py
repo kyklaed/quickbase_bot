@@ -35,10 +35,10 @@ def find_my_list(message): #печать строк сделанных толь�
     for i in range(len(a)):
         bot.send_message(message.from_user.id,", ".join(a[i])) 
 
-@bot.message_handler(content_types=["text"],func = lambda message: message.chat.id in id_pass and check_find[message.chat.id]== 2)
+@bot.message_handler(content_types=["text"],func = lambda message: message.chat.id in id_pass and check_find[message.chat.id]== 1)
 def date_find_doc(message):
     print("data find")
-    if check_find[message.chat.id]== 2:
+    if check_find[message.chat.id]== 1:
         datafind = re.findall(r'\d{2}.\d{2}.\d{4}',message.text)
         print(datafind)
         db = baza.Basesql('base_doc.db', 'users')
@@ -56,8 +56,6 @@ def state_mes (message):                #функция проверющая с�
 @bot.message_handler(commands = ["start","help"])
 def start(message):
     bot.send_message(message.from_user.id,"Hi, enter the password if you are not logged in")
-    check_find[message.chat.id]= 1
-    print("check_find = " ,check_find[message.chat.id])
 
 @bot.message_handler(commands=["find","findmy","datafind"],func = lambda message: message.chat.id in id_pass) # запуск поиска всей инфы из базы
 def find_row(message):              # запускам функцию печати из базы 
@@ -67,8 +65,7 @@ def find_row(message):              # запускам функцию печат
         find_my_list(message)
     if message.text == "/datafind":
        bot.send_message(message.from_user.id,"Enter data")
-       check_find[message.chat.id]=2
-       print(check_find[message.chat.id])
+       check_find[message.chat.id]=1
              
 @bot.message_handler(func = lambda message: message.text not in password_set and message.chat.id not in id_pass)
 def state_access(message):
@@ -77,8 +74,11 @@ def state_access(message):
 @bot.message_handler(func = lambda message: message.text in password_set) #авторизация по паролю
 def save_new_id(message):
     bot.send_message(message.from_user.id,"The correct password!")
-        
-    if message.chat.id not in id_pass:              #если id нет в списке значит добавляем 
+    check_find[message.chat.id]= 0
+    print("check_find = " ,check_find[message.chat.id])
+
+    if message.chat.id not in id_pass:              #если id нет в списке значит добавляем
+
         id_pass.append(message.chat.id)
         bot.send_message(message.from_user.id,"Your ID")
         bot.send_message(message.from_user.id, message.chat.id )
