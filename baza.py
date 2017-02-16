@@ -24,9 +24,7 @@ class Basesql:
             
     def date_find_row(self,rownum):
         with self.connection:
-            return self.cursor.execute('SELECT doc, docn, datastart, dataend FROM users WHERE datastart = {0}'.format(rownum)).fetchall()
-        
-        
+            return self.cursor.execute('SELECT doc, docn, datastart, dataend FROM users WHERE datastart = "{0}"'.format(rownum)).fetchall()
         
     def count_rows(self):
         """ Считаем количество строк """
@@ -38,7 +36,7 @@ class Basesql:
         """ Закрываем текущее соединение с БД """
         self.connection.close()
 
-
-#a =Basesql('base_doc.db','users')
-#print(a.select_random())
-#print(a.select_all())
+"""
+a =Basesql('base_doc.db','users')
+print(a.date_find_row('30.12.2016'))
+"""

@@ -13,7 +13,6 @@ gen_dic={}
 stop_set = ["Стоп","стоп","stop","Stop"]  # набор слов для выхода из систем
 check_find = {}
 
-
 def save_to_base(gen_dic,message):             # функция записи в базу
     db = baza.Basesql('base_doc.db', 'users')  # подключение к бд
     db.insert_db(gen_dic[message.chat.id][0], gen_dic[message.chat.id][1], gen_dic[message.chat.id][2], 
@@ -24,28 +23,29 @@ def save_to_base(gen_dic,message):             # функция записи в 
         gen_dic[message.chat.id].append(message.chat.id)        # добавялем в начало списка id для дальнейшей работы и добавления новых данных
         print("to new list for doc = ",gen_dic)
 
-def find_all_user_doc(message):
+def find_all_user_doc(message):  # печать всех записей
     db = baza.Basesql('base_doc.db', 'users') # подключение к бд
     a = db.mass_row()                         #выбираем все строки
     for i in range(len(a)):
         bot.send_message(message.from_user.id,", ".join(a[i])) # печатаем строки из базы
         
-def  find_my_list(message):
+def find_my_list(message): #печать строк сделанных только под id юзера
     db = baza.Basesql('base_doc.db', 'users')   # подключение к бд
     a = db.select_single(message.chat.id)       #выбираем только записи сделанные пользователем
     for i in range(len(a)):
         bot.send_message(message.from_user.id,", ".join(a[i])) 
 
-
+@bot.message_handler(content_types=["text"],func = lambda message: message.chat.id in id_pass and check_find[message.chat.id]== 2)
 def date_find_doc(message):
-    print("TYTYTYTYT")
-    if check_find[message.chat.id]== 1:
+    print("data find")
+    if check_find[message.chat.id]== 2:
         datafind = re.findall(r'\d{2}.\d{2}.\d{4}',message.text)
+        print(datafind)
         db = baza.Basesql('base_doc.db', 'users')
         a = db.date_find_row(datafind)
         for i in range(len(a)):
             bot.send_message(message.from_user.id,", ".join(a[i]))
- 
+        check_find[message.chat.id] = 0
 
 def state_mes (message):                #функция проверющая состояние пользователя
     if message.text in stop_set:        # если  слово в стоп листе
@@ -56,6 +56,8 @@ def state_mes (message):                #функция проверющая с�
 @bot.message_handler(commands = ["start","help"])
 def start(message):
     bot.send_message(message.from_user.id,"Hi, enter the password if you are not logged in")
+    check_find[message.chat.id]= 1
+    print("check_find = " ,check_find[message.chat.id])
 
 @bot.message_handler(commands=["find","findmy","datafind"],func = lambda message: message.chat.id in id_pass) # запуск поиска всей инфы из базы
 def find_row(message):              # запускам функцию печати из базы 
@@ -65,14 +67,9 @@ def find_row(message):              # запускам функцию печат
         find_my_list(message)
     if message.text == "/datafind":
        bot.send_message(message.from_user.id,"Enter data")
-       check_find[message.chat.id]=1
+       check_find[message.chat.id]=2
        print(check_find[message.chat.id])
-        
-        #datafind = re.findall(r'\d{2}.\d{2}.\d{4}',message.text)
-        #print(datafind)
-        #date_find_doc(datafind)
              
-
 @bot.message_handler(func = lambda message: message.text not in password_set and message.chat.id not in id_pass)
 def state_access(message):
     return bot.send_message(message.from_user.id,"Password error!")
@@ -80,7 +77,6 @@ def state_access(message):
 @bot.message_handler(func = lambda message: message.text in password_set) #авторизация по паролю
 def save_new_id(message):
     bot.send_message(message.from_user.id,"The correct password!")
-    
         
     if message.chat.id not in id_pass:              #если id нет в списке значит добавляем 
         id_pass.append(message.chat.id)
@@ -89,8 +85,7 @@ def save_new_id(message):
     else:
         bot.send_message(message.from_user.id,"You are already in the database")
 
-
-@bot.message_handler(func = lambda message: message.chat.id in id_pass)    # если авторизация выполнена 
+@bot.message_handler(func = lambda message: message.chat.id in id_pass and check_find[message.chat.id] == 0)    # если авторизация выполнена 
 def new_doc(message):
     state_mes(message)
     if message.chat.id not in gen_dic.keys():
@@ -111,3 +106,4 @@ def new_doc(message):
         
 
 bot.polling(none_stop=True)
+
