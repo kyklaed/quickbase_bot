@@ -50,7 +50,7 @@ def find_my_list(message): #печать строк сделанных толь�
 
 def date_find_doc(message):  #поиск по дате 
     datafind = re.findall(r'\d{2}.\d{2}.\d{4}',message.text)
-    if check_find[message.chat.id]== 1:  #возможно не нужное условие
+    if check_find[message.chat.id]== 1 and datafind:  #возможно не нужное условие
         #datafind = re.findall(r'\d{2}.\d{2}.\d{4}',message.text) # в поиск проходит только дата , регулярка
         print(datafind)
         db = baza.Basesql('base_doc.db', 'users')
@@ -58,6 +58,9 @@ def date_find_doc(message):  #поиск по дате
         for i in range(len(a)):
             bot.send_message(message.from_user.id,", ".join(a[i]))
         check_find[message.chat.id] = 0 # обнуляем счетчик
+    if check_find[message.chat.id]== 1 and not datafind:
+        bot.send_message(message.from_user.id,"You have entered the date")
+        
 
 
 def state_mes (message):                #функция проверющая состояние пользователя
@@ -77,7 +80,7 @@ def find_row(message):              # запускам функцию печат
     if message.text == "/findmy":
         find_my_list(message)
     if message.text == "/datafind":
-       bot.send_message(message.from_user.id,"Enter data") 
+       bot.send_message(message.from_user.id,"Enter the data") 
        check_find[message.chat.id]=1    #после предложения ввода даты счетчик устанвливаем в положение 1 
              
 @bot.message_handler(func = lambda message: message.text not in password_set and message.chat.id not in id_pass)
