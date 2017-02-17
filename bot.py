@@ -7,19 +7,29 @@ import re
 
 bot = telebot.TeleBot(config.token) #@quickbase_bot
 
+
 password_set=["111","222","333"]  #пароль доступа
 id_pass = []                      #сюда кладутся id пользователей
-gen_dic={}
+gen_dic={}                          #словарь для составления последовательности перед записьюй в бд
 stop_set = ["Стоп","стоп","stop","Stop"]  # набор слов для выхода из систем
-check_find = {}
+check_find = {}                         #чек список для функции поиска по дате 
 
 def save_to_base(gen_dic,message):             # функция записи в базу
     db = baza.Basesql('base_doc.db', 'users')  # подключение к бд
-    db.insert_db(gen_dic[message.chat.id][0], gen_dic[message.chat.id][1], gen_dic[message.chat.id][2], 
-                         gen_dic[message.chat.id][3], gen_dic[message.chat.id][4]) # добавляем в базу инфу в 4 поля
+    if len(gen_dic[message.chat.id])<5:
+        numm=5-len(gen_dic[message.chat.id])
+        for i in range(numm):
+            gen_dic[message.chat.id].append(0)
+        db.insert_db(gen_dic[message.chat.id][0], gen_dic[message.chat.id][1], gen_dic[message.chat.id][2], 
+                     gen_dic[message.chat.id][3], gen_dic[message.chat.id][4]) # добавляем в базу инфу в 4 поля
+    else:
+        db.insert_db(gen_dic[message.chat.id][0], gen_dic[message.chat.id][1], gen_dic[message.chat.id][2], 
+                     gen_dic[message.chat.id][3], gen_dic[message.chat.id][4])
+        
     print(len(gen_dic[message.chat.id]))
+    
     if len(gen_dic[message.chat.id]) >= 5:      #колличество элементов в списке
-        gen_dic[message.chat.id].clear()
+        gen_dic[message.chat.id].clear()        # очистка списка после записи в бд
         gen_dic[message.chat.id].append(message.chat.id)        # добавялем в начало списка id для дальнейшей работы и добавления новых данных
         print("to new list for doc = ",gen_dic)
 
@@ -35,17 +45,20 @@ def find_my_list(message): #печать строк сделанных толь�
     for i in range(len(a)):
         bot.send_message(message.from_user.id,", ".join(a[i])) 
 
-@bot.message_handler(content_types=["text"],func = lambda message: message.chat.id in id_pass and check_find[message.chat.id]== 1)
-def date_find_doc(message):
-    print("data find")
-    if check_find[message.chat.id]== 1:
-        datafind = re.findall(r'\d{2}.\d{2}.\d{4}',message.text)
+@bot.message_handler(content_types=["text"],func = lambda message: message.chat.id in id_pass
+                     and check_find[message.chat.id]== 1)
+
+def date_find_doc(message):  #поиск по дате 
+    datafind = re.findall(r'\d{2}.\d{2}.\d{4}',message.text)
+    if check_find[message.chat.id]== 1:  #возможно не нужное условие
+        #datafind = re.findall(r'\d{2}.\d{2}.\d{4}',message.text) # в поиск проходит только дата , регулярка
         print(datafind)
         db = baza.Basesql('base_doc.db', 'users')
-        a = db.date_find_row(datafind[0])
+        a = db.date_find_row(datafind[0]) # так как после нахождения даты получается список, берем по первому элементу списка
         for i in range(len(a)):
             bot.send_message(message.from_user.id,", ".join(a[i]))
-        check_find[message.chat.id] = 0
+        check_find[message.chat.id] = 0 # обнуляем счетчик
+
 
 def state_mes (message):                #функция проверющая состояние пользователя
     if message.text in stop_set:        # если  слово в стоп листе
@@ -64,8 +77,8 @@ def find_row(message):              # запускам функцию печат
     if message.text == "/findmy":
         find_my_list(message)
     if message.text == "/datafind":
-       bot.send_message(message.from_user.id,"Enter data")
-       check_find[message.chat.id]=1
+       bot.send_message(message.from_user.id,"Enter data") 
+       check_find[message.chat.id]=1    #после предложения ввода даты счетчик устанвливаем в положение 1 
              
 @bot.message_handler(func = lambda message: message.text not in password_set and message.chat.id not in id_pass)
 def state_access(message):
@@ -94,16 +107,18 @@ def new_doc(message):
             gen_dic[message.chat.id].append(message.chat.id)
             gen_dic[message.chat.id].append(message.text)
             print(gen_dic[message.chat.id])
-        if message.text == "end":           #если введено слово end деламе запись в базу 
+        if message.text == "end":           #если введено слово end деламе запись в базу
+            gen_dic[message.chat.id].remove("end")
             save_to_base(gen_dic,message)
     else:
         if message.text not in stop_set:
             gen_dic[message.chat.id].append(message.text)
             print(gen_dic[message.chat.id])
         if message.text == "end":           #если введено слово end деламе запись в базу
-            print(message)
+            gen_dic[message.chat.id].remove("end")
             save_to_base(gen_dic,message)
-        
+
+
 
 bot.polling(none_stop=True)
 
