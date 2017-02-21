@@ -113,6 +113,7 @@ def state_access(message):
 @bot.message_handler(func = lambda message: message.text in password_set) #авторизация по паролю
 def save_new_id(message):
     bot.send_message(message.from_user.id,"The correct password!")
+    bot.send_message(message.from_user.id, """To enter data into the database enter in the chat, first name, number,start date,end date and type in chat the word 'end' is the key, meaning the beginning of the record to the database.""")
     check_find[message.chat.id]= 0
 
     if message.chat.id not in id_pass:              #если id нет в списке значит добавляем
