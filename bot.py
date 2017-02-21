@@ -4,15 +4,33 @@ import config
 import telebot
 import baza
 import re
+import csv
+import os
 
 bot = telebot.TeleBot(config.token) #@quickbase_bot
 
 password_set=["111","222","333"]  #пароль доступа
-id_pass = []                      #сюда кладутся id пользователей
+id_pass = []                      #сюда id пользователей
 gen_dic={}                          #словарь для составления последовательности перед записьюй в бд
 stop_set = ["Стоп","стоп","stop","Stop"]  # набор слов для выхода из систем
 check_find = {}                         #чек список для функции поиска по дате 
 exit_key = "end"
+
+
+def post_file(message):
+    print("loook")
+    db = baza.Basesql('base_doc.db', 'users')
+    a = db.mass_row()
+   
+    with open('list_to_csv.csv', 'w',encoding="cp1251") as csv_file:
+        csv_writer = csv.writer(csv_file,delimiter=';',quotechar='|')
+        for num,item in enumerate(a):
+            csv_writer.writerow(a[num])
+  
+    doc = open('list_to_csv.csv', 'rb')
+    print("loo22")
+    bot.send_document(message.chat.id, doc)
+    os.remove('list_to_csv.csv')
 
 def save_to_base(gen_dic,message):             # функция записи в базу
     db = baza.Basesql('base_doc.db', 'users')  # подключение к бд
@@ -69,23 +87,25 @@ def state_mes (message):                #функция проверющая с�
         if message.chat.id in id_pass : # если пользователь авторизован
             bot.send_message(message.from_user.id,"You logged off") # сообщение о выходе из систем
             id_pass.remove(message.chat.id)   #удаляем id пользователя из списка
-            gen_dic[message.chat.id]=[]
-            gen_dic[message.chat.id].append(message.chat.id)
+            gen_dic[message.chat.id]=[]       #обнуляем список
+            gen_dic[message.chat.id].append(message.chat.id)  #добавляем в список айди для дальнейшей записи в базу 
 
 
 @bot.message_handler(commands = ["start","help"])
 def start(message):
     bot.send_message(message.from_user.id,"Hi, enter the password if you are not logged in")
 
-@bot.message_handler(commands=["find","findmy","datafind"],func = lambda message: message.chat.id in id_pass) # запуск поиска всей инфы из базы
+@bot.message_handler(commands=["find","findmy","datafind","savefile"],func = lambda message: message.chat.id in id_pass) # запуск поиска всей инфы из базы
 def find_row(message):              # запускам функцию печати из базы 
     if message.text =="/find":
         find_all_user_doc(message)
     if message.text == "/findmy":
         find_my_list(message)
     if message.text == "/datafind":
-       bot.send_message(message.from_user.id,"Enter the data") 
-       check_find[message.chat.id]=1    #после предложения ввода даты счетчик устанвливаем в положение 1 
+        bot.send_message(message.from_user.id,"Enter the data") 
+        check_find[message.chat.id]=1    #после предложения ввода даты счетчик устанвливаем в положение 1 
+    if message.text =="/savefile":
+        post_file(message)
              
 @bot.message_handler(func = lambda message: message.text not in password_set and message.chat.id not in id_pass)
 def state_access(message):
@@ -95,7 +115,6 @@ def state_access(message):
 def save_new_id(message):
     bot.send_message(message.from_user.id,"The correct password!")
     check_find[message.chat.id]= 0
-    print("check_find = " ,check_find[message.chat.id])
 
     if message.chat.id not in id_pass:              #если id нет в списке значит добавляем
 
