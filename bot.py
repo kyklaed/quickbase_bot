@@ -18,19 +18,18 @@ exit_key = "end"
 
 
 def post_file(message):
-    print("loook")
     db = baza.Basesql('base_doc.db', 'users')
     a = db.mass_row()
-   
-    with open('list_to_csv.csv', 'w',encoding="cp1251") as csv_file:
+
+    name_file = '{0}.csv'.format(message.chat.id)
+    with open(name_file, 'w',encoding="cp1251") as csv_file:
         csv_writer = csv.writer(csv_file,delimiter=';',quotechar='|')
         for num,item in enumerate(a):
             csv_writer.writerow(a[num])
-  
-    doc = open('list_to_csv.csv', 'rb')
-    print("loo22")
-    bot.send_document(message.chat.id, doc)
-    os.remove('list_to_csv.csv')
+
+    with open(name_file, 'rb') as doc:
+        bot.send_document(message.chat.id, doc)
+    os.remove(name_file)
 
 def save_to_base(gen_dic,message):             # функция записи в базу
     db = baza.Basesql('base_doc.db', 'users')  # подключение к бд
